@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"searchEngine/models"
 
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -38,17 +39,22 @@ func GetResources(ctx context.Context, keyword string) ([]models.SearchEngineRes
 }
 
 func GetResource(ctx context.Context, id string) (models.Resource, error) {
-	filter := bson.M{
-		"_id": bson.ObjectIdHex(id),
-	}
 
+	objectId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+        return models.Resource{}, err
+    }
+	filter := bson.M{
+		"_id": objectId,
+	}
+	
 	var result models.Resource
-	resource, err := SearchCollection.Find(ctx, filter)
+	err = SearchCollection.FindOne(ctx, filter).Decode(&result)
+	
 	if err != nil {
 		log.Println("Error get data from mongo: ", err)
-		return result, err
+		return models.Resource{}, err
 	}
-
-	resource.All(ctx, &result)
+	
 	return result, nil
 }
