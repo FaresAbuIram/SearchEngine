@@ -1,0 +1,51 @@
+definitions:
+  models.CreateResourceResponse:
+    properties:
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /createNewResource:
+    post:
+      consumes:
+      - multipart/form-data
+      description: This route uses to create a new resource
+      parameters:
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      - in: formData
+        items:
+          type: string
+        name: tags
+        required: true
+        type: array
+      - in: formData
+        name: title
+        required: true
+        type: string
+      - in: formData
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+      summary: Create a new resource
+swagger: "2.0"
