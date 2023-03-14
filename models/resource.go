@@ -18,7 +18,7 @@ type CreateResourceResponse struct {
 }
 
 type SearchEngineRequest struct {
-	keyword    string `bson:"keyword"`
+	Keyword string `bson:"keyword" binding:"required"`
 }
 
 type SearchEngineResult struct {

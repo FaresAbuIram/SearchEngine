@@ -16,17 +16,6 @@ func ErrorResponseStatus(context *gin.Context, status int, message string) {
 
 func SuccessResponseStatus(context *gin.Context, status int, data string) {
 	context.JSON(status, gin.H{"message": data})
-
-}
-
-func SuccessResponseStatusForToken(context *gin.Context, status int, data interface{}) {
-	cacceptedHeader := context.Request.Header["Accept"][0]
-	switch cacceptedHeader {
-	case "text/xml":
-		context.XML(status, gin.H{"data": data, "message": "success"})
-	default:
-		context.JSON(status, gin.H{"data": data, "message": "success"})
-	}
 }
 
 // Create new resource
@@ -113,10 +102,51 @@ func Createresource(context *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        body  body models.SearchEngineRequest true "Search for a resource"
-// @Success      200  {object}  jsonresult.JSONResult{data=[]models.SearchEngineResult}
+// @Success      200  {object}  []models.SearchEngineResult
 // @Failure      400  {object}	models.CreateResourceResponse
 // @Failure      500  {object}	models.CreateResourceResponse
 // @Router       /search [post]
 func Search(context *gin.Context) {
+	var searchEngineRequest models.SearchEngineRequest
+	if err := context.BindJSON(&searchEngineRequest); err != nil {
+		log.Printf("missing keyword: ", err)
+		ErrorResponseStatus(context, http.StatusBadRequest, "missing keyword")
+		return
+	}
+
+	result, err := database.GetResources(database.Ctx, searchEngineRequest.Keyword)
+	if err != nil {
+		log.Printf("failed to get data from the database: ", err)
+		ErrorResponseStatus(context, http.StatusInternalServerError, "failed to get data from the database")
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"data": result})
+}
+
+// Get resource information
+// @Summary      Get resource information
+// @Description  This route uses to Get resource information in order to visualise the resource
+// @Accept       json
+// @Produce      json
+// @Param        id  path string true "resource id"
+// @Success      200  {object}  models.Resource
+// @Failure      400  {object}	models.CreateResourceResponse
+// @Failure      500  {object}	models.CreateResourceResponse
+// @Router       /resource/{id} [get]
+func GetResource(context *gin.Context) {
+	id := context.Param("id")
+	if id == "" {
+		log.Printf("missing id")
+		ErrorResponseStatus(context, http.StatusBadRequest, "missing id")
+		return
+	}
+
+	result, err := database.GetResource(database.Ctx, id)
+	if err != nil {
+		log.Printf("failed to get data from the database: ", err)
+		ErrorResponseStatus(context, http.StatusInternalServerError, "failed to get data from the database")
+		return
+	}
+	context.JSON(http.StatusOK, gin.H{"data": result})
 
 }

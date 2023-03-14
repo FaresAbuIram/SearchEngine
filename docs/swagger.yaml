@@ -4,6 +4,20 @@ definitions:
       message:
         type: string
     type: object
+  models.SearchEngineRequest:
+    properties:
+      keyword:
+        type: string
+    required:
+    - keyword
+    type: object
+  models.SearchEngineResult:
+    properties:
+      id:
+        type: string
+      title:
+        type: string
+    type: object
 info:
   contact: {}
 paths:
@@ -48,4 +62,34 @@ paths:
           schema:
             $ref: '#/definitions/models.CreateResourceResponse'
       summary: Create a new resource
+  /search:
+    post:
+      consumes:
+      - application/json
+      description: This route uses to Search for a keyword in a tags
+      parameters:
+      - description: Search for a resource
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.SearchEngineRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SearchEngineResult'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+      summary: Search for a keyword
 swagger: "2.0"
