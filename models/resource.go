@@ -16,3 +16,12 @@ type Resource struct {
 type CreateResourceResponse struct {
 	Message string `bson:"message"`
 }
+
+type SearchEngineRequest struct {
+	keyword    string `bson:"keyword"`
+}
+
+type SearchEngineResult struct {
+	ID    string `bson:"_id"`
+	Title string `bson:"title"`
+}

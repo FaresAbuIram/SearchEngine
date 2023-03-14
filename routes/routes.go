@@ -19,6 +19,6 @@ func Setup(router *gin.Engine) {
 
 	router.Use(static.Serve("/", static.LocalFile("./website/dist", true)))
 	router.POST("/createNewResource", controllers.Createresource)
-	// router.POST("/get/:token", controllers.GetToken)
+	router.POST("/search", controllers.Search)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

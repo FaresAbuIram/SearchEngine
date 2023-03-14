@@ -107,69 +107,16 @@ func Createresource(context *gin.Context) {
 	SuccessResponseStatus(context, http.StatusOK, "successfully stored the resource")
 }
 
-// // Get the secret Information
-// // @Summary      analyze the secret
-// // @Description  This routes generate new secret have the user's data
-// // @Tags         token
-// // @Accept       json
-// // @Accept       xml
-// // @Produce      json
-// // @Produce      xml
-// // @Param        token  path      string  true  "get the secret info"
-// // @Success      200  {object}    models.ResponseData
-// // @Failure      400  {object}	  models.ErrorModel
-// // @Failure      500  {object}	  models.ErrorModel
-// // @Router       /get/{token} [post]
-// func GetToken(context *gin.Context) {
-// 	tokenString := context.Param("token")
+// Search for a keyword
+// @Summary      Search for a keyword
+// @Description  This route uses to Search for a keyword in a tags
+// @Accept       json
+// @Produce      json
+// @Param        body  body models.SearchEngineRequest true "Search for a resource"
+// @Success      200  {object}  jsonresult.JSONResult{data=[]models.SearchEngineResult}
+// @Failure      400  {object}	models.CreateResourceResponse
+// @Failure      500  {object}	models.CreateResourceResponse
+// @Router       /search [post]
+func Search(context *gin.Context) {
 
-// 	claims := jwt.MapClaims{}
-// 	token, err := jwt.ParseWithClaims(tokenString, &claims, func(token *jwt.Token) (interface{}, error) {
-// 		return []byte(os.Getenv("SECRET_TOKEN")), nil
-// 	})
-
-// 	if err != nil {
-// 		ErrorResponseStatus(context, http.StatusBadRequest, "invalid token")
-// 		return
-// 	}
-
-// 	info := token.Claims.(*jwt.MapClaims)
-// 	id := (*info)["id"]
-// 	secretData := (*info)["data"]
-// 	objectId, err := primitive.ObjectIDFromHex(fmt.Sprintf("%v", id))
-// 	if err != nil {
-// 		ErrorResponseStatus(context, http.StatusBadRequest, "invalid id")
-// 		return
-// 	}
-// 	// get the token object from database
-// 	var object models.Secret
-// 	err = database.SearchCollection.
-// 		FindOne(database.Ctx, bson.D{{Key: "_id", Value: objectId}}).
-// 		Decode(&object)
-
-// 	if err != nil {
-// 		ErrorResponseStatus(context, http.StatusBadRequest, "invalid token")
-// 		return
-// 	}
-
-// 	if object.Views <= 0 {
-// 		// delete expired object
-// 		_, err := database.SearchCollection.DeleteOne(database.Ctx, bson.D{{Key: "_id", Value: objectId}})
-// 		if err != nil {
-// 			ErrorResponseStatus(context, http.StatusInternalServerError, "database error")
-// 			return
-// 		}
-// 		ErrorResponseStatus(context, http.StatusBadRequest, "No views available")
-// 		return
-// 	}
-// 	// update the number of views
-// 	filter := bson.D{{Key: "_id", Value: objectId}}
-// 	update := bson.D{{Key: "$set", Value: bson.D{{Key: "views", Value: object.Views - 1}}}}
-// 	_, err = database.SearchCollection.UpdateOne(database.Ctx, filter, update)
-
-// 	if err != nil {
-// 		ErrorResponseStatus(context, http.StatusInternalServerError, "database error")
-// 		return
-// 	}
-// 	SuccessResponseStatusForToken(context, http.StatusOK, secretData, object)
-// }
+}
