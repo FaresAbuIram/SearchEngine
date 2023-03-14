@@ -4,6 +4,24 @@ definitions:
       message:
         type: string
     type: object
+  models.Resource:
+    properties:
+      path:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      title:
+        type: string
+      type:
+        type: string
+    required:
+    - path
+    - tags
+    - title
+    - type
+    type: object
   models.SearchEngineRequest:
     properties:
       keyword:
@@ -62,6 +80,34 @@ paths:
           schema:
             $ref: '#/definitions/models.CreateResourceResponse'
       summary: Create a new resource
+  /resource/{id}:
+    get:
+      consumes:
+      - application/json
+      description: This route uses to Get resource information in order to visualise
+        the resource
+      parameters:
+      - description: resource id
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Resource'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.CreateResourceResponse'
+      summary: Get resource information
   /search:
     post:
       consumes:

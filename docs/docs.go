@@ -77,6 +77,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/resource/{id}": {
+            "get": {
+                "description": "This route uses to Get resource information in order to visualise the resource",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Get resource information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "resource id",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Resource"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateResourceResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/models.CreateResourceResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/search": {
             "post": {
                 "description": "This route uses to Search for a keyword in a tags",
@@ -129,6 +170,32 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Resource": {
+            "type": "object",
+            "required": [
+                "path",
+                "tags",
+                "title",
+                "type"
+            ],
+            "properties": {
+                "path": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }

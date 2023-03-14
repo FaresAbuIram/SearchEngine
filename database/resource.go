@@ -36,3 +36,19 @@ func GetResources(ctx context.Context, keyword string) ([]models.SearchEngineRes
 	resources.All(ctx, &result)
 	return result, nil
 }
+
+func GetResource(ctx context.Context, id string) (models.Resource, error) {
+	filter := bson.M{
+		"_id": bson.ObjectIdHex(id),
+	}
+
+	var result models.Resource
+	resource, err := SearchCollection.Find(ctx, filter)
+	if err != nil {
+		log.Println("Error get data from mongo: ", err)
+		return result, err
+	}
+
+	resource.All(ctx, &result)
+	return result, nil
+}
