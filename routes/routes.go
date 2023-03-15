@@ -2,6 +2,7 @@ package routes
 
 import (
 	"searchEngine/controllers"
+	"searchEngine/database"
 	"searchEngine/docs"
 
 	"github.com/gin-contrib/static"
@@ -17,9 +18,12 @@ func Setup(router *gin.Engine) {
 	docs.SwaggerInfo.Host = "localhost:8080"
 	docs.SwaggerInfo.Schemes = []string{"http"}
 
+	resourcedatabase := database.NewResourceService()
+	resourceService := controllers.NewResourceService(resourcedatabase)
+
 	router.Use(static.Serve("/", static.LocalFile("./website/dist", true)))
-	router.POST("/createNewResource", controllers.Createresource)
-	router.POST("/search", controllers.Search)
-	router.GET("/resource/:id", controllers.GetResource)
+	router.POST("/createNewResource", resourceService.CreateResource)
+	router.POST("/search", resourceService.Search)
+	router.GET("/resource/:id", resourceService.GetResource)
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 }

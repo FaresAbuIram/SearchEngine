@@ -18,6 +18,16 @@ func SuccessResponseStatus(context *gin.Context, status int, data string) {
 	context.JSON(status, gin.H{"message": data})
 }
 
+type ResourceService struct {
+	Database database.Resource
+}
+
+func NewResourceService(database database.Resource) *ResourceService {
+	return &ResourceService{
+		Database: database,
+	}
+}
+
 // Create new resource
 // @Summary      Create a new resource
 // @Description  This route uses to create a new resource
@@ -29,9 +39,8 @@ func SuccessResponseStatus(context *gin.Context, status int, data string) {
 // @Failure      400  {object}	models.CreateResourceResponse
 // @Failure      500  {object}	models.CreateResourceResponse
 // @Router       /createNewResource [post]
-func Createresource(context *gin.Context) {
+func (r *ResourceService) CreateResource(context *gin.Context) {
 	var reqResource models.ReqResource
-
 	if context.PostForm("title") != "" {
 		reqResource.Title = context.PostForm("title")
 	} else {
@@ -55,7 +64,6 @@ func Createresource(context *gin.Context) {
 		ErrorResponseStatus(context, http.StatusBadRequest, "tags is required")
 		return
 	}
-
 	file, err := context.FormFile("file")
 	if err != nil {
 		log.Printf("File Error: ", err)
@@ -85,7 +93,7 @@ func Createresource(context *gin.Context) {
 	}
 
 	// save the resource in the data base
-	err = database.InsertNewResource(database.Ctx, reqResource, file, fileName)
+	err = r.Database.InsertNewResource(database.Ctx, reqResource, file.Filename, fileName)
 
 	if err != nil {
 		log.Println(err)
@@ -106,7 +114,7 @@ func Createresource(context *gin.Context) {
 // @Failure      400  {object}	models.CreateResourceResponse
 // @Failure      500  {object}	models.CreateResourceResponse
 // @Router       /search [post]
-func Search(context *gin.Context) {
+func (r *ResourceService) Search(context *gin.Context) {
 	var searchEngineRequest models.SearchEngineRequest
 	if err := context.BindJSON(&searchEngineRequest); err != nil {
 		log.Printf("missing keyword: ", err)
@@ -114,7 +122,7 @@ func Search(context *gin.Context) {
 		return
 	}
 
-	result, err := database.GetResources(database.Ctx, searchEngineRequest.Keyword)
+	result, err := r.Database.GetResources(database.Ctx, searchEngineRequest.Keyword)
 	if err != nil {
 		log.Printf("failed to get data from the database: ", err)
 		ErrorResponseStatus(context, http.StatusInternalServerError, "failed to get data from the database")
@@ -133,7 +141,7 @@ func Search(context *gin.Context) {
 // @Failure      400  {object}	models.CreateResourceResponse
 // @Failure      500  {object}	models.CreateResourceResponse
 // @Router       /resource/{id} [get]
-func GetResource(context *gin.Context) {
+func (r *ResourceService) GetResource(context *gin.Context) {
 	id := context.Param("id")
 	if id == "" {
 		log.Printf("missing id")
@@ -141,7 +149,7 @@ func GetResource(context *gin.Context) {
 		return
 	}
 
-	result, err := database.GetResource(database.Ctx, id)
+	result, err := r.Database.GetResource(database.Ctx, id)
 	if err != nil {
 		log.Printf("failed to get data from the database: ", err)
 		ErrorResponseStatus(context, http.StatusInternalServerError, "failed to get data from the database")
