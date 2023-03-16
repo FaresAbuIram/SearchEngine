@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 	"searchEngine/models"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,17 +14,14 @@ type Resource interface {
 	GetResource(ctx context.Context, id string) (models.Resource, error)
 }
 
-type ResourceDatabase struct {
-
-}
+type ResourceDatabase struct{}
 
 func NewResourceService() *ResourceDatabase {
-	return &ResourceDatabase{
-	}
+	return &ResourceDatabase{}
 }
 
+// InsertNewResource function to insert new resource in the database.
 func (r *ResourceDatabase) InsertNewResource(ctx context.Context, reqResource models.ReqResource, fileName, filePath string) error {
-
 	data := bson.M{
 		"title": reqResource.Title,
 		"type":  reqResource.Type,
@@ -33,11 +29,15 @@ func (r *ResourceDatabase) InsertNewResource(ctx context.Context, reqResource mo
 		"path":  filePath + fileName,
 	}
 	_, err := SearchCollection.InsertOne(Ctx, data)
-
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (r *ResourceDatabase)  GetResources(ctx context.Context, keyword string) ([]models.SearchEngineResult, error) {
+// GetResources function to get all the resources
+// that partially or fully match the keyword string.
+func (r *ResourceDatabase) GetResources(ctx context.Context, keyword string) ([]models.SearchEngineResult, error) {
 	filter := bson.M{
 		"tags": bson.M{"$regex": keyword},
 	}
@@ -45,15 +45,14 @@ func (r *ResourceDatabase)  GetResources(ctx context.Context, keyword string) ([
 	var result []models.SearchEngineResult
 	resources, err := SearchCollection.Find(ctx, filter)
 	if err != nil {
-		log.Println("Error get data from mongo: ", err)
 		return nil, err
 	}
 	resources.All(ctx, &result)
 	return result, nil
 }
 
-func (r *ResourceDatabase)  GetResource(ctx context.Context, id string) (models.Resource, error) {
-
+// GetResource function to get resource's information by id.
+func (r *ResourceDatabase) GetResource(ctx context.Context, id string) (models.Resource, error) {
 	objectId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return models.Resource{}, err
@@ -66,7 +65,6 @@ func (r *ResourceDatabase)  GetResource(ctx context.Context, id string) (models.
 	err = SearchCollection.FindOne(ctx, filter).Decode(&result)
 
 	if err != nil {
-		log.Println("Error get data from mongo: ", err)
 		return models.Resource{}, err
 	}
 

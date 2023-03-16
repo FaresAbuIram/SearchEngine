@@ -19,27 +19,35 @@ import (
 )
 
 func TestCreateResource(t *testing.T) {
+	// prepare required data
 	router := gin.Default()
 	resourceMocks := new(ResourceMocks.Resource)
 	resourceService := controllers.NewResourceService(resourceMocks)
+
+	// fake data 
 	ReqResource := models.ReqResource{
 		Title: "title",
-		Type:  "HTML Pages",
+		Type:  "HTML Page",
 		Tags:  []string{"tag1", "tag2"},
 	}
 
-	resourceMocks.On("InsertNewResource", mock.AnythingOfType("*context.emptyCtx"), ReqResource, "example.html", "files/HTML/").Return(nil)
+	// mock the InsertNewResource function with fake data
+	resourceMocks.On("InsertNewResource", mock.AnythingOfType("*context.emptyCtx"), ReqResource, "example.html", "searchEngine/files/HTML/").Return(nil)
 
+	// prepare our request
 	router.POST("/createNewResource", resourceService.CreateResource)
+
+	// create file form
 	file, err := os.Open("example.html")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
+	// create form data
 	formData := map[string]string{
 		"title": "title",
-		"type":  "HTML Pages",
+		"type":  "HTML Page",
 	}
 	tags := []string{"tag1", "tag2"}
 
@@ -52,20 +60,19 @@ func TestCreateResource(t *testing.T) {
 		panic(err)
 	}
 
+	// write our fake data to the body
 	_, err = io.Copy(filePart, file)
 	if err != nil {
-		fmt.Println(err)
-		// panic(err)
+		panic(err)
 	}
-
 	for key, value := range formData {
 		_ = writer.WriteField(key, value)
 	}
-
 	for _, tag := range tags {
 		writer.WriteField("tags", tag)
 	}
 
+	// prapare the request before send it
 	req, err := http.NewRequest("POST", "/createNewResource", body)
 	if err != nil {
 		t.Fatal(err)
@@ -76,17 +83,101 @@ func TestCreateResource(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	rr := httptest.NewRecorder()
 
-	router.ServeHTTP(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status OK; got %v", rr.Code)
+	response := httptest.NewRecorder()
+	// send the request
+	router.ServeHTTP(response, req)
+
+
+	// Test cases
+	if response.Code != http.StatusOK {
+		t.Errorf("expected status OK; got %v", response.Code)
+	}
+	expected := `{"message":"successfully stored the resource"}`
+	if response.Body.String() != expected {
+        t.Errorf("Expected %q but got %q", expected, response.Body.String())
+    }
+}
+
+// the request will missing the title 
+func TestCreateResourceNegative(t *testing.T) {
+	// prepare required data
+	router := gin.Default()
+	resourceMocks := new(ResourceMocks.Resource)
+	resourceService := controllers.NewResourceService(resourceMocks)
+
+	// fake data 
+	ReqResource := models.ReqResource{
+		Type:  "HTML Page",
+		Tags:  []string{"tag1", "tag2"},
 	}
 
-	expected := `{"message":"successfully stored the resource"}`
-	if rr.Body.String() != expected {
-        t.Errorf("Expected %q but got %q", expected, rr.Body.String())
+	// mock the InsertNewResource function with fake data
+	resourceMocks.On("InsertNewResource", mock.AnythingOfType("*context.emptyCtx"), ReqResource, "example.html", "searchEngine/files/HTML/").Return(nil)
+
+	// prepare our request
+	router.POST("/createNewResource", resourceService.CreateResource)
+
+	// create file form
+	file, err := os.Open("example.html")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	// create form data
+	formData := map[string]string{
+		"type":  "HTML Page",
+	}
+	tags := []string{"tag1", "tag2"}
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	filePart, err := writer.CreateFormFile("file", file.Name())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	// write our fake data to the body
+	_, err = io.Copy(filePart, file)
+	if err != nil {
+		panic(err)
+	}
+	for key, value := range formData {
+		_ = writer.WriteField(key, value)
+	}
+	for _, tag := range tags {
+		writer.WriteField("tags", tag)
+	}
+
+	// prapare the request before send it
+	req, err := http.NewRequest("POST", "/createNewResource", body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	err = writer.Close()
+	if err != nil {
+		panic(err)
+	}
+
+
+	response := httptest.NewRecorder()
+	// send the request
+	router.ServeHTTP(response, req)
+
+
+	// Test cases
+	if response.Code != http.StatusBadRequest {
+		t.Errorf("expected status BadRequest; got %v", response.Code)
+	}
+	expected := `{"message":"title is required"}`
+	if response.Body.String() != expected {
+        t.Errorf("Expected %q but got %q", expected, response.Body.String())
     }
 }
 
@@ -112,15 +203,15 @@ func TestSearch(t *testing.T) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp := httptest.NewRecorder()
-    router.ServeHTTP(resp, req)
-	if resp.Code != http.StatusOK {
-        t.Errorf("Expected status code %d but got %d", http.StatusOK, resp.Code)
+	result := httptest.NewRecorder()
+    router.ServeHTTP(result, req)
+	if result.Code != http.StatusOK {
+        t.Errorf("Expected status code %d but got %d", http.StatusOK, result.Code)
     }
 
 	expected := `{"data":[{"ID":"1","Title":"Fares"}]}`
-    if resp.Body.String() != expected {
-        t.Errorf("Expected %q but got %q", expected, resp.Body.String())
+    if result.Body.String() != expected {
+        t.Errorf("Expected %q but got %q", expected, result.Body.String())
     }
 }
 
@@ -131,9 +222,9 @@ func TestGetResource(t *testing.T) {
 
 	response := models.Resource{
 		Title: "Fares",
-		Type: "HTML Pages",
+		Type: "HTML Page",
 		Tags: []string{"tag1", "tag2"},
-		Path: "files/HTML/example.html",
+		Path: "searchEngine/files/HTML/example.html",
 	}
 
 	resourceMocks.On("GetResource", mock.AnythingOfType("*context.emptyCtx"), "1").Return(response, nil)
@@ -146,14 +237,14 @@ func TestGetResource(t *testing.T) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	resp := httptest.NewRecorder()
-    router.ServeHTTP(resp, req)
-	if resp.Code != http.StatusOK {
-        t.Errorf("Expected status code %d but got %d", http.StatusOK, resp.Code)
+	result := httptest.NewRecorder()
+    router.ServeHTTP(result, req)
+	if result.Code != http.StatusOK {
+        t.Errorf("Expected status code %d but got %d", http.StatusOK, result.Code)
     }
 	
-	expected := `{"data":{"Title":"Fares","Type":"HTML Pages","Tags":["tag1","tag2"],"Path":"files/HTML/example.html"}}`
-    if resp.Body.String() != expected {
-        t.Errorf("Expected %q but got %q", expected, resp.Body.String())
+	expected := `{"data":{"Title":"Fares","Type":"HTML Page","Tags":["tag1","tag2"],"Path":"searchEngine/files/HTML/example.html"}}`
+    if result.Body.String() != expected {
+        t.Errorf("Expected %q but got %q", expected, result.Body.String())
     }
 }

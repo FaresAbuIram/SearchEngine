@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/createNewResource": {
             "post": {
-                "description": "This route uses to create a new resource",
+                "description": "This route uses to create a new resource it accepts form data with your file form data contains Title as string, Type as string (only supprt this values[\"HTML Pages\", \"image\"]), and Tags as array of string",
                 "consumes": [
                     "multipart/form-data"
                 ],
